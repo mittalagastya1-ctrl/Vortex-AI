@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001";
+const API_URL = "http://localhost:3000";
 const STORAGE_KEY = "vortex_conversations";
 const CHAT_TIMEOUT_MS = 120000;
 const HEALTH_TIMEOUT_MS = 5000;
