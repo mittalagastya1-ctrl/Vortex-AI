@@ -405,6 +405,97 @@ function initializeApp() {
             }
         }
     }
+    // CHAT LIST
+
+function renderChatList() {
+    chatList.replaceChildren();
+
+    conversations.forEach(chat => {
+        const row = document.createElement("div");
+        row.className = "chat-row";
+
+        const item = document.createElement("div");
+        item.className = "chat-item";
+        item.textContent = chat.title;
+        item.title = chat.title;
+
+        if (chat.id === currentChatId) {
+            item.classList.add("active");
+        }
+
+        item.addEventListener("click", () => {
+            currentChatId = chat.id;
+            renderMessages();
+            renderChatList();
+        });
+
+        // DELETE BUTTON
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-chat";
+        deleteButton.innerHTML = "×";
+        deleteButton.title = "Delete conversation";
+        deleteButton.setAttribute(
+            "aria-label",
+            `Delete ${chat.title}`
+        );
+
+        deleteButton.addEventListener("click", event => {
+            event.stopPropagation();
+            deleteChat(chat.id);
+        });
+
+        row.append(item, deleteButton);
+        chatList.appendChild(row);
+    });
+}
+
+
+// DELETE CONVERSATION
+
+function deleteChat(chatId) {
+    const chat = conversations.find(c => c.id === chatId);
+
+    if (!chat) return;
+
+    const confirmed = window.confirm(
+        `Delete "${chat.title}"? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    // Cancel an active AI request belonging to this chat.
+    if (activeRequest?.chatId === chatId) {
+        const request = activeRequest;
+
+        activeRequest = null;
+
+        window.clearTimeout(request.timeoutId);
+        request.controller.abort();
+
+        sendButton.disabled = false;
+    }
+
+    // Remove conversation.
+    conversations = conversations.filter(
+        c => c.id !== chatId
+    );
+
+    // Select another conversation if the current one was deleted.
+    if (currentChatId === chatId) {
+        currentChatId = conversations.length
+            ? conversations[0].id
+            : null;
+    }
+
+    saveConversations();
+
+    // Create a fresh conversation if none remain.
+    if (!conversations.length) {
+        createChat();
+    } else {
+        renderMessages();
+        renderChatList();
+    }
 
     // NEW CHAT BUTTON
 
